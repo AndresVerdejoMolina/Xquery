@@ -1,0 +1,122 @@
+9)
+a-xquery version "3.1";
+doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW[position()=last()-1]/APELLIDO/text()
+b-xquery version "3.1";
+doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW[position()=3]
+c-doc('db/nueva/empleados.xml')/EMPLEADOS/count(EMP_ROW[DEPT_NO=10])
+d-doc('db/nueva/empleados.xml')/EMPLEADOS/sum(EMP_ROW[DEPT_NO=20]/SALARIO)
+e-doc('db/nueva/empleados.xml')/EMPLEADOS/min(EMP_ROW[OFICIO='ANALISTA']/SALARIO)
+doc('db/nueva/empleados.xml')/EMPLEADOS/max(EMP_ROW[OFICIO='ANALISTA']/SALARIO)
+f-doc('db/nueva/empleados.xml')/EMPLEADOS/avg(EMP_ROW[DEPT_NO=10]/SALARIO)
+g-doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW/concat(APELLIDO,OFICIO,SALARIO)
+h-doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW[starts-with(APELLIDO,'A')]
+i-doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW[contains(OFICIO,'OR')]/OFICIO
+j-doc('db/nueva/empleados.xml')/EMPLEADOS/EMP_ROW[string-length(APELLIDO) < 4]
+
+10)
+a-doc('db/nueva/productos.xml')//produc/denominacion | //produc/precio
+b-doc('db/nueva/productos.xml')//produc/denominacion[contains(text(), 'Placa Base')]
+c-doc('db/nueva/productos.xml')//produc/precio[text()>60 and ../cod_zona=20]
+d-doc('db/nueva/productos.xml')/productos/count(produc[contains(denominacion, 'Memoria') and cod_zona=10])
+e-doc('db/nueva/productos.xml')/productos/avg(produc[contains(denominacion, 'Micro')]/precio)
+f-doc('db/nueva/productos.xml')/productos/(produc[stock_minimo>stock_actual])
+g-doc('db/nueva/productos.xml')/productos/(produc[max(precio)])
+h-doc('db/nueva/productos.xml')/productos/produc[cod_zona=20 and precio=min(precio)]
+
+Problemas Xquery
+1-
+for $prof in /EMPLEADOS/EMP_ROW
+let $ofi := $prof/OFICIO
+where starts-with(data($ofi),'P')
+return $ofi
+
+2-
+for $prof in distinct-values(/EMPLEADOS/EMP_ROW/OFICIO)
+let $contador:= count(/EMPLEADOS/EMP_ROW[OFICIO=$prof])
+return 
+    <todo>
+    <OFICIO>{$prof}</OFICIO>
+    <num>{$contador}</num>
+    </todo>
+3-
+let $deps := /departamentos/DEP_ROW/DEPT_NO
+let $unique-deps := distinct-values($deps)
+return
+   <result>  
+      <items>
+      {
+         for $dep in $unique-deps
+         return <item>{concat($dep, "-", count(/EMPLEADOS/EMP_ROW[DEPT_NO = $dep]), "-", round(avg(/EMPLEADOS/EMP_ROW[DEPT_NO = $dep]/SALARIO)))}</item>
+      }
+      </items>
+   </result>
+
+Problemas XQuery_2
+1-
+let $zona := /productos/produc/cod_zona
+let $unique-zona := distinct-values($zona)
+return
+   <result>  
+  	<items>
+  	{
+     	for $zonas in $unique-zona
+     	return <item>{concat($zonas, "-", count(/productos/produc[cod_zona = $zonas]))}</item>
+  	}
+  	</items>
+   </result>
+
+2-
+let $products := /productos/produc
+return
+   <result>  
+  	<items>
+  	{
+     	for $product in $products
+    	return if($product/cod_zona = 10)
+     	then <zona_10>{$product/denominacion}</zona_10>
+     	else if($product/cod_zona = 20)
+     	then <zona_20>{$product/denominacion}</zona_20>
+     	else if($product/cod_zona = 30)
+     	then <zona_30>{$product/denominacion}</zona_30>
+     	else if($product/cod_zona = 40)
+     	then <zona_40>{$product/denominacion}</zona_40>
+    	else()
+  	}
+  	</items>
+   </result>
+
+
+
+3-
+let $zona := /zonas/zona/cod_zona
+let $unique-zonas := distinct-values($zona)
+return
+   <result>  
+  	<items>
+  	{
+     	for $zonas in $unique-zonas
+     	return <item>{concat($zonas, '-',/productos/produc[cod_zona=$zona and precio = max(precio)]/denominacion)}</item>
+  	}
+  	</items>
+   </result>
+
+4-
+let $products := /productos/produc
+return
+   <result>   
+  	<items>
+  	{
+     	for $product in $products
+     	return if($product[starts-with(denominacion, 'Placa')])
+     	then <placa>{$product/denominacion}</placa>
+     	else if($product[starts-with(denominacion, 'Memoria')])
+     	then <memoria>{$product/denominacion}</memoria>
+     	else if($product[starts-with(denominacion, 'Micro')])
+     	then <micro>{$product/denominacion}</micro>
+     	else <otros>{$product/denominacion}</otros>
+    	 
+  	}
+  	</items>
+</result>
+
+
