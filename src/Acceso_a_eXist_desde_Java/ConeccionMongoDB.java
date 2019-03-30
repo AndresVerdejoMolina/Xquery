@@ -1,8 +1,9 @@
 
 import java.io.FileWriter;
+import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList
-;
+import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Scanner;
 
@@ -23,40 +24,40 @@ public class ConeccionMongoDB{
 	static String stringGeneral="";
 	static String error_general="Err:\tElije una opcion valida.";
 	
-	public static void main(String[] args){
+	public static void main(String[] args) throws IOException{
 		MongoClient cliente = new MongoClient();
 		MongoDatabase db = cliente.getDatabase ("Segundamano");
 		MongoCollection <Document> coleccion_de_moviles = db.getCollection("Moviles");//Creando base de datos
 		
 		do {
 			System.out.println("¿Que quieres hacer?");
-			System.out.println("<1>Insertar coleccion");
-			System.out.println("<2>Visualizar coleccion");
-			System.out.println("<3>Modificar coleccion");
-			System.out.println("<4>Eliminar coleccion");
-			System.out.println("<5>Volcar datos a un archivo en el sistema");
+			System.out.println("<1>Insertar documento");
+			System.out.println("<2>Visualizar documento");
+			System.out.println("<3>Modificar documento");
+			System.out.println("<4>Eliminar documento");
+			System.out.println("<5>Volcar un documento a un archivo en el sistema");
 			System.out.println("<0>Salir");
-			intGeneral=comprobarValorInt();//Funcion que comprueba si el valor de entrada es de tipo int (linea 263)
+			intGeneral=comprobarValorInt();//Funcion que comprueba si el valor de entrada es de tipo int (linea 278)
 			
 			switch(intGeneral) {
 				case 1:{
-					insertarDatos(coleccion_de_moviles);//En el caso de que introduzca 1, insertaremos datos (linea 71)
+					insertarDocumento(coleccion_de_moviles);//En el caso de que introduzca 1, insertaremos un documento (linea 71)
 					break;
 				}
 				case 2:{
-					visualizarDatos(coleccion_de_moviles);	//En el caso de que introduzca 2, visualizaremos datos (linea 122)
+					visualizarDocumento(coleccion_de_moviles);	//En el caso de que introduzca 2, visualizaremos un documento (linea 123)
 					break;
 					
 				}case 3:{
-					modificarDatos(coleccion_de_moviles);	//En el caso de que introduzca 3, modificaremos datos (linea 198)
+					modificarDocumento(coleccion_de_moviles);	//En el caso de que introduzca 3, modificaremos un documento (linea 204)
 					
 					break;					
 				}case 4:{
-					eliminarDatos(coleccion_de_moviles);	//En el caso de que introduzca 4, eliminaremos datos (linea 178)
+					eliminarDocumento(coleccion_de_moviles);	//En el caso de que introduzca 4, eliminaremos un documento (linea 181)
 					break;
 					
 				}case 5:{
-					volcarDatos(coleccion_de_moviles);		//En el caso de que introduzca 5, volcaremos datos a un archivo del sistema (linea 227)
+					volcarDocumento(coleccion_de_moviles);		//En el caso de que introduzca 5, volcaremos documento a un archivo del sistema (linea 233)
 					break;
 					
 				}default:{
@@ -68,7 +69,7 @@ public class ConeccionMongoDB{
 
 	}
 	
-	public static void insertarDatos(MongoCollection<org.bson.Document> coleccion_de_moviles) {
+	public static void insertarDocumento(MongoCollection<org.bson.Document> coleccion_de_moviles) {
 		
 		do {
 			String modelo_nuevo_movil;
@@ -78,10 +79,10 @@ public class ConeccionMongoDB{
 			
 			System.out.println("Para insertar un nuevo Movil introduce");
 			System.out.print("el modelo del movil: ");
-			modelo_nuevo_movil=comprobarValorString();//Funcion que comprueba si el valor de entrada es de tipo String (linea 275)
+			modelo_nuevo_movil=comprobarValorString();//Funcion que comprueba si el valor de entrada es de tipo String (linea 290)
 			
 			System.out.print("tamaño de pantalla del movil(pulgadas): ");
-			tamaño_pantalla=comprobarValorDouble();//Funcion que comprueba si el valor de entrada es de tipo Double (linea 287)
+			tamaño_pantalla=comprobarValorDouble();//Funcion que comprueba si el valor de entrada es de tipo Double (linea 302)
 			int retval = tamaño_pantalla.compareTo(tamaño_pantalla_max);//Comparando el tamaño de pantalla introducido con el valor maximo
 
 			while(retval > 0) {//Si la variable devuelve mayor a 0, es que ha introducido un valor mayor que (tamaño_pantalla_max)
@@ -119,7 +120,7 @@ public class ConeccionMongoDB{
 		
 	}
 	
-	public static void visualizarDatos(MongoCollection<org.bson.Document> coleccion_de_moviles) {
+	public static void visualizarDocumento(MongoCollection<org.bson.Document> coleccion_de_moviles) {
 		
 		do {
 			System.out.println("Visualizar...");
@@ -177,13 +178,18 @@ public class ConeccionMongoDB{
 		
 	}
 	
-	public static void eliminarDatos(MongoCollection<org.bson.Document> coleccion_de_moviles) {
+	public static void eliminarDocumento(MongoCollection<org.bson.Document> coleccion_de_moviles) {
 		
 		do {
 			
 			System.out.println("Para borrar necesito el id:");
 			stringGeneral=comprobarValorString();
-			coleccion_de_moviles.deleteOne(new Document("_id", new ObjectId(stringGeneral)));//Borrando documento por la id introducida por consola
+			try {
+				coleccion_de_moviles.deleteOne(new Document("_id", new ObjectId(stringGeneral)));//Borrando documento por la id introducida por consola
+			}catch(IllegalArgumentException e) {//En el caso de que la id introducida no coincida en ninguna id de un documento
+				System.out.println("No se ha encotrado nada con esa id(" + stringGeneral +").");
+				break;				
+			}
 			
 			System.out.println("¿Otra vez?");
 			System.out.println("<0>Si");
@@ -195,7 +201,7 @@ public class ConeccionMongoDB{
 		System.out.println("---------------------------------------");
 	}
 	
-	public static void modificarDatos(MongoCollection<org.bson.Document> coleccion_de_moviles) {
+	public static void modificarDocumento(MongoCollection<org.bson.Document> coleccion_de_moviles) {
 		
 		do {
 			System.out.println("Para modificar necesito el modelo del movil:");
@@ -224,39 +230,48 @@ public class ConeccionMongoDB{
 		System.out.println("---------------------------------------");
 	}
 	
-	public static void volcarDatos(MongoCollection<org.bson.Document> coleccion_de_moviles) {
+	public static void volcarDocumento(MongoCollection<org.bson.Document> coleccion_de_moviles) throws IOException {
 		
 		MongoCursor<Document> cursor = coleccion_de_moviles.find().iterator(); 
-		
-		FileWriter fichero = null;
-		PrintWriter pw = null;
-		System.out.println("Necesito saber donde quieres guardar los datos, con el nombre del archivo.");
-		System.out.println("(Ruta por defecto C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt)\nPara aplicar la ruta por defecto, simplemente presiona Enter.");
-		String rutaFichero = comprobarValorString();
-		try{
-			if(rutaFichero.isEmpty() || rutaFichero.equals(" ")) {
-				fichero = new FileWriter("C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt");
-				rutaFichero = "C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt";
-			}else {
-				fichero = new FileWriter(rutaFichero);
-			}
-			pw = new PrintWriter(fichero);
-
-			System.out.println("Escribe el id del movil que quieres volcar al fichero: ");
-			stringGeneral = comprobarValorString();
-			while (cursor.hasNext()) {
-				Document doc = cursor.next(); 
-				if(doc.getObjectId("_id").equals(new ObjectId(stringGeneral))) {//Obteniendo id del objecto, en el caso de que la id sea igual al que ha introducido por consola, se insertaran los datos de ese docunento
-					pw.print(doc.toJson());//Ecribiendo en documento
+		do {
+			FileWriter fichero = null;
+			PrintWriter pw = null;
+			System.out.println("Necesito saber donde quieres guardar los datos, con el nombre del archivo.");
+			System.out.println("(Ruta por defecto C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt)\nPara aplicar la ruta por defecto, simplemente presiona Enter.");
+			String rutaFichero = comprobarValorString();
+			try{
+				if(rutaFichero.isEmpty() || rutaFichero.equals(" ")) {
+					fichero = new FileWriter("C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt");
+					rutaFichero = "C:\\Users\\Usuario\\Desktop\\proyectoMongoDB.txt";
+				}else {
+					fichero = new FileWriter(rutaFichero);
 				}
-			} 
-			cursor.close();
-			fichero.close();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		System.out.println("Se ha añadido correctamente a: " + rutaFichero);
-		System.out.println("---------------------------------------");
+				pw = new PrintWriter(fichero);
+	
+				System.out.println("Escribe el id del movil que quieres volcar al fichero: ");
+				System.out.println(">Profesor en esta ocacion no he podido hacer el codigo tan robusto como anteriormente, si introduces un id no existente, da igual donde coloque el (try & catch) o que tipo de excepcion coloque, el programa igualmente peta.");
+				stringGeneral = comprobarValorString();
+				while (cursor.hasNext()) {
+					Document doc = cursor.next(); 
+					if(doc.getObjectId("_id").equals(new ObjectId(stringGeneral))) {//Obteniendo id del objecto, en el caso de que la id sea igual al que ha introducido por consola, se insertaran los datos de ese docunento
+						pw.print(doc.toJson());//Ecribiendo en documento
+					}
+				} 
+				cursor.close();
+				fichero.close();
+			} catch (Exception e) {
+				e.printStackTrace();
+				break;
+			}
+			System.out.println("Se ha añadido correctamente a: " + rutaFichero);
+			System.out.println("---------------------------------------");
+			System.out.println("¿Otra vez?");
+			System.out.println("<0>Si");
+			System.out.println("<1>No");
+			
+			intGeneral=comprobarValorInt();
+			
+		}while(intGeneral==0);
 		
 	}
 	
